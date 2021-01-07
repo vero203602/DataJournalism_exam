@@ -1,0 +1,328 @@
+---
+title: "Data_Viz"
+author: "Veronica Cipriani"
+date: "22/4/2020"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## DATA JOURNALISM PROJECT
+
+The interactive Gmap graph and some plots are computed with Python.  
+Some other visualization are, instead, computer in R. The code as follows.
+
+***
+
+##### Linechart for altitude
+
+In order to understand why people decide to go by bus instead of walk to the University, the map with all the different stops is completed by a line chart that shows the precise altitude of each single stops in the route of bus 5.  
+
+```{r}
+
+setwd('/Users/veronicacipriani/Desktop/Data Science/anno II/primo sem/data Journalism/progetto/DJ')
+df <- read.csv('stop_per_linechart.csv', header = TRUE, sep = ',')
+
+library(ggplot2)
+library(hrbrthemes)
+
+df$altitude <- as.numeric(df$altitude)
+df$stop_name <- as.character(df$stop_name)
+df$stop_name <- factor(df$stop_name, levels=unique(df$stop_name))
+
+
+linechart <- ggplot(df, aes(x=stop_name, y=altitude, group = 1)) + 
+  geom_line(aes(color = 'altit. fermate')) +
+  geom_area(aes(), alpha = 0.5, position = 'identity') +
+  scale_color_manual(values = "#654321") +
+  scale_y_continuous(limits = c(150, 400)) +
+  labs(title="FERMATE DEL BUS NUMERO 5", 
+       subtitle="Line chart che mostra l'altitudine di ogni fermata in ordine di arrivo, 
+rispetto all'altezza media (tratteggiata)", 
+       caption="Source: GTFS Trento", 
+       y="Altitudine (m)", 
+       x = "Fermata",
+       color=NULL) +
+  annotate("text", x = 12.8, y = 185, label = "alt. media", size = 4) +
+  geom_hline(yintercept = 194, linetype = 'dashed', color = 'black') +
+  theme(axis.text.x = element_text(angle = 90, vjust=0.5, size = 8), 
+        panel.grid.minor = element_blank()) 
+
+
+linechart
+```
+ 
+ 
+ ***
+
+##### Linechart for train station departure 
+
+In order to understand the complex situation, a line chart of departure of bus 5 and 5/ is displayed in the article. In addition, the same chart depicts also the arriving number of trains and extra-urban buses, in order to understand also the impact of commuters.  
+
+The plot also underline some hot time-slots, that are due to the hypothetic higher number of passengers in these moments. This is calculus is made on the basis of lectures' timetables.  
+In order, we have:
+
+-7 bachelor degree in Povo (each composed of 3 different years with different lectures);  
+-10 master degree (each master has 2 years of lectures).  
+Given a total number of students of 3665, we can count an approximate number of $=3665/(7*3 + 10* 2) = 90$ students per each lecture. Considering those who live in Povo, take the car or do not attend lectures, a good approximation of students per lectures seems to be 40/45 students.  Once we estimate more or less the number of students per lecture, we need the number of lecture per hour.  
+
+```{r}
+setwd('/Users/veronicacipriani/Desktop/Data Science/anno II/primo sem/data Journalism/progetto/DJ')
+
+library(knitr)
+df <- read.csv('table_lezioni.txt', header = TRUE, sep = ',')
+kable(df)
+```
+
+This count led to consider two slots as the most **crowded**:  
+- 8 am to 11 am;  
+- 1 pm to 3 pm;  
+Therefore, the plots will underline these slots.  
+
+Given this data, the linechart present two yellow areas that underline the most crowded moments during the day.  
+```{r}
+
+setwd('/Users/veronicacipriani/Desktop/Data Science/anno II/primo sem/data Journalism/progetto/DJ/r')
+## ogni 30 min
+
+data <- read.csv('linechart_copia.txt', header = TRUE, sep = ',')
+data$X <- NULL
+
+data$h <- as.POSIXct(data$h, format = "%H:%M:%S", tz = "GMT")
+
+library(scales)
+library(ggplot2)
+
+ggplot(data, aes(x=h)) + 
+  geom_rect(aes(xmin = (h[6]-600), xmax = (h[12]-600), 
+                ymin = 0, ymax = 6),
+            fill = "gold", alpha = 0.008) +
+  geom_rect(aes(xmin = (h[16]-600), xmax = (h[20]-600), 
+                ymin = 0, ymax = 6),
+            fill = "gold", alpha = 0.008) +
+  geom_line(aes(y=count, col=type)) + 
+  scale_x_datetime(breaks = date_breaks("2 hour"),
+                   labels = date_format("%H:%M")) +
+  scale_y_continuous(breaks = round(seq(min(data$count), max(data$count), by = 1),1)) +
+  labs(title="LINECHART CON NUMERO DI BUS E TRENI", 
+       subtitle="Fermata di Piazza Dante, con evidenziate in giallo
+le fasce orarie più affollate - ogni 30 minuti", 
+       caption="Fonti: Trentino Trasporti, Trenitalia", 
+       y="Numero di bus/treni (ogni 30 min)", x = 'Ora',
+       color=NULL) +
+  scale_color_manual(labels = c("bus5", "bus5barra", 'train'), 
+                     values = c("bus5" ='#007fff', "bus5barra"= '#00008B', 'train'='#800000')) +
+  theme(axis.text.x = element_text(angle = 90, vjust=0.5, size = 8),  
+        panel.grid.minor = element_blank())  
+
+
+bus5barra <- sum(data$count[38:44]) # number of buses 5/ in the crowded period in the morning
+```
+
+
+
+Then, the same plot is represented without the arriving of trains.  
+
+```{r}
+setwd('/Users/veronicacipriani/Desktop/Data Science/anno II/primo sem/data Journalism/progetto/DJ/r')
+
+data <- read.csv('linechart_copia.txt', header = TRUE, sep = ',')
+data <- data[1:44,]
+data$X <- NULL
+
+data$h <- as.POSIXct(data$h, format = "%H:%M:%S", tz = "GMT")
+
+library(scales)
+library(ggplot2)
+
+ggplot(data, aes(x=h)) + 
+  geom_rect(aes(xmin = (h[6]-600), xmax = (h[12]-600), 
+                ymin = 0, ymax = 6),
+            fill = "gold", alpha = 0.008) +
+  geom_rect(aes(xmin = (h[16]-600), xmax = (h[20]-600), 
+                ymin = 0, ymax = 6),
+            fill = "gold", alpha = 0.008) +
+  geom_line(aes(y=count, col=type)) + 
+  scale_x_datetime(breaks = date_breaks("2 hour"),
+                   labels = date_format("%H:%M")) +
+  scale_y_continuous(breaks = round(seq(min(data$count), max(data$count), by = 1),1)) +
+  labs(title="LINECHART CON NUMERO DI BUS", 
+       subtitle="Fermata di Piazza Dante, con evidenziate in giallo
+le fasce orarie più affollate - ogni 30 minuti", 
+       caption="Fonti: Trentino Trasporti", 
+       y="Numero di bus (ogni 30 min)", x = 'Ora',
+       color=NULL) +
+  scale_color_manual(labels = c("bus5", "bus5barra"), 
+                     values = c("bus5" ='#007fff', "bus5barra"= '#00008B' )) +
+  theme(axis.text.x = element_text(angle = 90, vjust=0.5, size = 8),  
+        panel.grid.minor = element_blank())  
+
+```
+
+In order to have the same visualization, but with different timespan - 15min - we plot the same data from another dataset.
+
+```{r}
+setwd('/Users/veronicacipriani/Desktop/Data Science/anno II/primo sem/data Journalism/progetto/DJ/r')
+## ogni 15 min 
+
+data <- read.csv('linechart15min.txt', header = TRUE, sep = ',')
+data$X <- NULL
+
+data$h <- as.POSIXct(data$h, format = "%H:%M:%S", tz = "GMT")
+
+library(scales)
+library(ggplot2)
+
+ggplot(data, aes(x=h)) + 
+  geom_rect(aes(xmin = (h[10]+300), xmax = (h[22]+300), 
+                ymin = 0, ymax = 4),
+            fill = "gold", alpha = 0.005) +
+  geom_rect(aes(xmin = (h[30]+300), xmax = (h[38]+300), 
+                ymin = 0, ymax = 4),
+            fill = "gold", alpha = 0.005) +
+  geom_line(aes(y=count, col=type)) + 
+  scale_x_datetime(breaks = date_breaks("2 hour"),
+                   labels = date_format("%H:%M")) +
+  scale_y_continuous(breaks = round(seq(min(data$count), max(data$count), by = 1),1)) +
+  labs(title="LINECHART CON NUMERO DI BUS E TRENI", 
+       subtitle="Fermata di Piazza Dante, con evidenziate in giallo
+le fasce orarie più affollate - ogni 15 minuti", 
+       caption="Fonti: Trentino Trasporti, Trenitalia", 
+       y="Numero di bus/treni (ogni 15 min)", x = 'Ora',
+       color=NULL) +
+  scale_color_manual(labels = c("bus5", "bus5barra", 'train'), 
+                     values = c("bus5" ='#007fff', "bus5barra"= '#00008B', 'train'='#800000')) +
+  theme(axis.text.x = element_text(angle = 90, vjust=0.5, size = 8),  
+        panel.grid.minor = element_blank()) 
+
+```
+
+The same plot is also performed with no data about commuters:
+
+```{r}
+setwd('/Users/veronicacipriani/Desktop/Data Science/anno II/primo sem/data Journalism/progetto/DJ/r')
+
+data <- read.csv('linechart15min.txt', header = TRUE, sep = ',')
+data <- data[1:85,]
+data$X <- NULL
+
+data$h <- as.POSIXct(data$h, format = "%H:%M:%S", tz = "GMT")
+
+library(scales)
+library(ggplot2)
+
+ggplot(data, aes(x=h)) + 
+  geom_rect(aes(xmin = (h[10]+300), xmax = (h[22]+300), 
+                ymin = 0, ymax = 4),
+            fill = "gold", alpha = 0.008) +
+  geom_rect(aes(xmin = (h[30]+300), xmax = (h[38]+300), 
+                ymin = 0, ymax = 4),
+            fill = "gold", alpha = 0.008) +
+  geom_line(aes(y=count, col=type)) + 
+  scale_x_datetime(breaks = date_breaks("2 hour"),
+                   labels = date_format("%H:%M")) +
+  scale_y_continuous(breaks = round(seq(min(data$count), max(data$count), by = 1),1)) +
+  labs(title="LINECHART CON NUMERO DI BUS", 
+       subtitle="Fermata di Piazza Dante, con evidenziate in giallo
+le fasce orarie più affollate - ogni 15 minuti", 
+       caption="Fonti: Trentino Trasporti", 
+       y="Numero di bus (ogni 15 min)", x = 'Ora',
+       color=NULL) +
+  scale_color_manual(labels = c("bus5", "bus5barra"), 
+                     values = c("bus5" ='#007fff', "bus5barra"= '#00008B' )) +
+  theme(axis.text.x = element_text(angle = 90, vjust=0.5, size = 8),  
+        panel.grid.minor = element_blank())
+
+```
+
+
+Given this depicted situation, there is a further 
+
+```{r}
+setwd('/Users/veronicacipriani/Desktop/DJ')
+
+df <- read.csv('table_lezioni.txt', header = TRUE, sep = ',')
+dfbus5 <- read.csv('partenze_stazione.txt', header = TRUE, sep = ',')
+dfbus5barra <- read.csv('partenze_5barra.txt', header = TRUE, sep = ',')
+dfbus5$X <- NULL
+dfbus5barra$X <- NULL
+
+dfbus5 <- dfbus5[29:143,]
+dfbus5barra <- dfbus5barra[3:34,]
+
+df$ora2 <- as.POSIXct(df$ora, format = "%H:%M:%S", tz = "GMT")
+dfbus5$h <- as.POSIXct(dfbus5$departure, format = "%H:%M:%S", tz = "GMT")
+dfbus5barra$h <- as.POSIXct(dfbus5barra$departure, format = "%H:%M:%S", tz = "GMT")
+
+d <- (dim(df)[1])
+db <- (dim(dfbus5)[1])
+dbbarra <- (dim(dfbus5barra)[1])
+
+rownames(dfbus5) <- 1:db
+rownames(dfbus5barra) <- 1:dbbarra
+
+df$stima_stud <- df$num.lezioni*40
+df$bus5 <- rep(0,dim(df)[1])
+df$bus5barra <- rep(0,dim(df)[1])
+
+for (i in 1:d){
+  for (j in 1:db){
+    if (i == 1) {
+      ora <- df$ora2[i]
+      oraj <- dfbus5$h[j]
+      if (oraj <= ora){
+        df$bus5[i] <- df$bus5[i] + dfbus5$partenze.bus[j]
+      }
+    } else {
+      oraj <- dfbus5$h[j]
+      prima <- df$ora2[i-1]
+      dopo <- df$ora2[i]
+      if (prima < oraj && oraj < dopo){
+        df$bus5[i] <- df$bus5[i] + dfbus5$partenze.bus[j]
+      } else {
+        j = j+1
+      }
+    }
+  }
+}
+
+
+for (i in 1:d){
+  for (j in 1:dbbarra){
+    oraj <- dfbus5barra$h[j]
+    if (i == 1) {
+      ora <- df$ora2[i]
+      if (oraj <= ora){
+        df$bus5barra[i] <- df$bus5barra[i] + dfbus5barra$partenze.bus[j]
+      }
+    } else {
+      prima <- df$ora2[i-1]
+      dopo <- df$ora2[i]
+      if (prima < oraj && oraj < dopo){
+        df$bus5barra[i] <- df$bus5barra[i] + dfbus5barra$partenze.bus[j]
+      } else {
+        j = j+1
+      }
+    }
+  }
+}
+
+# per calcolare la portata totale in uno slot orario serve la capienza dei bus
+#capienza5 <-
+#capienza5barra <-
+#df$capienzabus <- df$bus5*capienza5 + df$bus5barra*capienza5barra
+
+df$ora2 <- NULL #per avere solo l'indicazione dell'ora nel df e quindi nella tabella
+colnames(df) <- c('Ora', 'Num. Lez.', 'Stima Stud.', 'Bus 5', 'Bus 5/')
+
+write.table(df,"lezioni_studenti.txt",sep=",",row.names=FALSE)
+
+library(knitr)
+kable(df)
+
+
+```
