@@ -24,7 +24,7 @@ In order to understand why people decide to go by bus instead of walk to the Uni
 
 ```{r}
 
-setwd('/Users/veronicacipriani/Desktop/Data Science/anno II/primo sem/data Journalism/progetto/DJ')
+setwd('')
 df <- read.csv('stop_per_linechart.csv', header = TRUE, sep = ',')
 
 library(ggplot2)
@@ -71,7 +71,7 @@ In order, we have:
 Given a total number of students of 3665, we can count an approximate number of $=3665/(7*3 + 10* 2) = 90$ students per each lecture. Considering those who live in Povo, take the car or do not attend lectures, a good approximation of students per lectures seems to be 40/45 students.  Once we estimate more or less the number of students per lecture, we need the number of lecture per hour.  
 
 ```{r}
-setwd('/Users/veronicacipriani/Desktop/Data Science/anno II/primo sem/data Journalism/progetto/DJ')
+setwd('')
 
 library(knitr)
 df <- read.csv('table_lezioni.txt', header = TRUE, sep = ',')
@@ -86,7 +86,7 @@ Therefore, the plots will underline these slots.
 Given this data, the linechart present two yellow areas that underline the most crowded moments during the day.  
 ```{r}
 
-setwd('/Users/veronicacipriani/Desktop/Data Science/anno II/primo sem/data Journalism/progetto/DJ/r')
+setwd('')
 ## ogni 30 min
 
 data <- read.csv('linechart_copia.txt', header = TRUE, sep = ',')
@@ -128,7 +128,7 @@ bus5barra <- sum(data$count[38:44]) # number of buses 5/ in the crowded period i
 Then, the same plot is represented without the arriving of trains.  
 
 ```{r}
-setwd('/Users/veronicacipriani/Desktop/Data Science/anno II/primo sem/data Journalism/progetto/DJ/r')
+setwd('')
 
 data <- read.csv('linechart_copia.txt', header = TRUE, sep = ',')
 data <- data[1:44,]
@@ -166,7 +166,7 @@ le fasce orarie più affollate - ogni 30 minuti",
 In order to have the same visualization, but with different timespan - 15min - we plot the same data from another dataset.
 
 ```{r}
-setwd('/Users/veronicacipriani/Desktop/Data Science/anno II/primo sem/data Journalism/progetto/DJ/r')
+setwd('')
 ## ogni 15 min 
 
 data <- read.csv('linechart15min.txt', header = TRUE, sep = ',')
@@ -204,7 +204,7 @@ le fasce orarie più affollate - ogni 15 minuti",
 The same plot is also performed with no data about commuters:
 
 ```{r}
-setwd('/Users/veronicacipriani/Desktop/Data Science/anno II/primo sem/data Journalism/progetto/DJ/r')
+setwd('')
 
 data <- read.csv('linechart15min.txt', header = TRUE, sep = ',')
 data <- data[1:85,]
@@ -243,7 +243,7 @@ le fasce orarie più affollate - ogni 15 minuti",
 Given this depicted situation, there is a further 
 
 ```{r}
-setwd('/Users/veronicacipriani/Desktop/DJ')
+setwd('')
 
 df <- read.csv('table_lezioni.txt', header = TRUE, sep = ',')
 dfbus5 <- read.csv('partenze_stazione.txt', header = TRUE, sep = ',')
